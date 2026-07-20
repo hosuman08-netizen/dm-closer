@@ -1,19 +1,5 @@
-# p27-agentic-dm-closer — Agentic DM Closer
+# DM Closer
 
-**Money angle:** B2B/크리에이터 DM 영업 에이전트 · SaaS  
-**Pitch:** 인플루언서·쇼핑몰 DM 자동 응대·업셀. 2026 agentic commerce.  
-**Status:** scaffold 2026-07-21 · DNA minimal  
-**Track:** PROJECT  
-**Public:** fictional entertainment / tools where applicable · finance track = transparent only · 18+
+LIVE: https://hosuman08-netizen.github.io/dm-closer/
 
-## North Star
-Ship thin live → measure install/activate/share → FOMO+share DNA → monetize.
-
-## Next
-- [ ] Core loop 1 screen
-- [ ] legionTrack install/session/share
-- [ ] Hub card
-- [ ] neo seed when core ready
-
-## LEARNED 2026-07-21 parallel
-- PWA sw shell · always-learning stamp · fleet parallel wave
+BUILT real loop 2026-07-21 parallel — not scaffold.
