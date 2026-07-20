@@ -9,6 +9,11 @@
     else if(t==='pro') msg='안녕하세요 '+w+',\\n\\n'+p+' 관련해 간단히 제안 드립니다. 비슷한 분들이 첫 주에 체감한 포인트는 (1)시간 절약 (2)전환입니다. 15분 콜 가능 시간이 있으실까요?';
     else msg='안녕하세요 '+w+'! 평소 콘텐츠/업무 보면서 응원했어요. '+p+' 한번 써보시면 딱일 것 같아서 슬쩍 공유드려요 🙂 관심 있으시면 링크 바로 드릴게요!';
     var o=document.getElementById('out'); o.style.display='block'; o.textContent=msg;
+    if(!document.getElementById('copyBtn')){
+      var b=document.createElement('button'); b.id='copyBtn'; b.textContent='복사'; b.style.marginTop='8px';
+      b.onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(msg); try{legionTrack('share_peak',{})}catch(e){}};
+      o.parentNode.appendChild(b);
+    }
     try{legionTrack('activate',{tone:t})}catch(e){}
   };
   try{legionTrack('session_start',{})}catch(e){}
