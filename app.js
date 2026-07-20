@@ -73,3 +73,5 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   try{legionTrack('session_start',{})}catch(e){}
   render('');
 })();
+
+/* LEGION_WAVE_64_wave_stamp */ /* ship wave 64 2026-07-21T07:43:31 */
