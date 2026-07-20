@@ -1,4 +1,7 @@
 
+
+/* LEGION_WAVE_19_session_counter */
+try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorage.setItem('lw_p27_agentic__session_counter','1');localStorage.setItem('lw_p27_agentic__session_counter',String((+(localStorage.getItem('lw_p27_agentic__session_counter')||0))+1));}}catch(e){}
 (function(){
   var root=document.getElementById('app');
   var tones={friendly:'친근',pro:'프로',short:'짧고 세게',urgent:'마감 FOMO'};
