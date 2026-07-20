@@ -1,7 +1,7 @@
 
 (function(){
   var root=document.getElementById('app');
-  root.innerHTML='<div class="card"><input id="prod" placeholder="제품/제안"/><input id="who" placeholder="상대 (크리에이터, 사장님…)"/><select id="tone"><option value="friendly">친근</option><option value="pro">프로</option><option value="short">짧고 세게</option><option value="urgent">마감 FOMO</option></select><button id="go">DM 초안</button><div id="out" class="card" style="margin-top:10px;display:none"></div></div>';
+  root.innerHTML='<div class="card"><input id="prod" placeholder="예: Mac Wallpaper / 사주 미니앱"/><input id="who" placeholder="상대 (크리에이터, 사장님…)"/><select id="tone"><option value="friendly">친근</option><option value="pro">프로</option><option value="short">짧고 세게</option><option value="urgent">마감 FOMO</option></select><button id="go">DM 초안</button><div id="out" class="card" style="margin-top:10px;display:none"></div></div>';
   document.getElementById('go').onclick=function(){
     var p=document.getElementById('prod').value||'우리 서비스', w=document.getElementById('who').value||'님', t=document.getElementById('tone').value;
     var msg='';
