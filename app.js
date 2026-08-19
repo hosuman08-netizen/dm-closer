@@ -83,11 +83,12 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     return true;
   }
   /* WAVE141: 해제 토스트 1줄. 로컬 문구만 · 예약/발송/TG/메일 0 */
+  /* WAVE148: 토스트에 장이름만. 로컬 라벨만 · 예약/발송/TG/메일 0 */
   var undoToast='';
   var undoToastTok=0;
   function undoToastLine(step){
     if(!steps[step]) return '';
-    return (steps[step])+' ✓ 해제 · 발송 없음';
+    return steps[step];
   }
   function armUndoToast(step){
     undoToast=undoToastLine(step);
