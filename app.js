@@ -85,26 +85,44 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   /* WAVE141: 해제 토스트 1줄. 로컬 문구만 · 예약/발송/TG/메일 0 */
   /* WAVE148: 토스트에 장이름만. 로컬 라벨만 · 예약/발송/TG/메일 0 */
   /* WAVE155: 토스트 위치 고정. 레이아웃 안 밀림 · 예약/발송/TG/메일 0 */
+  /* WAVE158: 토스트 재해제 시 재표시. 숨김 후 다시 켜기 · 예약/발송/TG/메일 0 */
   var undoToast='';
   var undoToastTok=0;
+  var undoToastRetr=false;
   function undoToastLine(step){
     if(!steps[step]) return '';
     return steps[step];
   }
   function undoToastPos(){ return 'fixed'; }
+  function undoToastMs(){ return 2200; }
   function undoToastCss(){
     return 'position:'+undoToastPos()+';left:50%;bottom:18px;transform:translateX(-50%);z-index:40;margin:0;padding:8px 14px;border-radius:10px;background:#1c1826;border:1px solid #e0b552;color:#e0b552;max-width:420px;width:calc(100% - 28px);text-align:center;pointer-events:none';
   }
+  function undoToastIsHidden(){
+    var el=typeof document!=='undefined'?document.getElementById('undoToast'):null;
+    if(!el) return false;
+    return el.style.display==='none';
+  }
   function armUndoToast(step){
+    var retr=!!undoToast || undoToastIsHidden();
     undoToast=undoToastLine(step);
     if(!undoToast) return;
+    undoToastRetr=retr;
     var tok=++undoToastTok;
+    var el=typeof document!=='undefined'?document.getElementById('undoToast'):null;
+    if(el){
+      el.style.display='';
+      el.style.cssText=undoToastCss();
+      el.textContent=undoToast;
+      el.setAttribute('data-retoast', retr?'1':'0');
+    }
     setTimeout(function(){
       if(tok!==undoToastTok) return;
       undoToast='';
-      var el=document.getElementById('undoToast');
-      if(el) el.style.display='none';
-    },2200);
+      undoToastRetr=false;
+      var e=document.getElementById('undoToast');
+      if(e){ e.style.display='none'; e.setAttribute('data-retoast','0'); }
+    }, undoToastMs());
   }
   function dayKey(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function fomoLeft(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}
@@ -186,7 +204,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       +'<button type="button" id="skipDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(skipOn?';border-color:#e0b552;color:#e0b552':'')+'">skip-if-done'+(skipOn?' ON':'')+'</button>'
       +'<button type="button" id="undoDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(done[curStep]?'':';opacity:.55')+'">장✓ 해제</button>'
       +'<span class="sub" style="margin:0">'+(done[curStep]?'현재 장✓ 1탭 해제 · 발송 없음':(skipOn?(doneN()>=3?'3장 보냄✓ · ✓탭=해제':('보냄✓ 건너뜀 · ✓탭=해제 · 남은 '+(3-doneN()))):'보냄✓ 장 유지 · 발송 없음'))+'</span></div>'
-      +(undoToast?'<p class="sub" id="undoToast" style="'+undoToastCss()+'">'+undoToast+'</p>':'')
+      +(undoToast?'<p class="sub" id="undoToast" data-retoast="'+(undoToastRetr?'1':'0')+'" style="'+undoToastCss()+'">'+undoToast+'</p>':'')
       +'<div class="row" style="margin-top:8px;gap:6px"><button id="go">DM 초안</button><button class="sec" id="allTones">4톤 한 번에</button></div>'
       +(msg?'<p class="sub" id="delayHint" style="margin:8px 0 0">이 장 '+steps[curStep]+' · D+'+dels[curStep]+' · 예약/발송 없음</p>':'')
       +'<div id="out" class="card" style="margin-top:10px;'+(msg?'':'display:none')+'">'+(msg||'').replace(/</g,'&lt;')+'</div>'
