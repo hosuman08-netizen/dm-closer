@@ -90,6 +90,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   /* WAVE169: 토스트 탭=즉시숨김. 3000ms 유지 · 예약/발송/TG/메일 0 */
   /* WAVE173: 숨김 후 해제버튼 포커스. 포커스만 · 예약/발송/TG/메일 0 */
   /* WAVE178: 해제버튼 포커스 링. 링만 · 예약/발송/TG/메일 0 */
+  /* WAVE183: 링 중 재탭=링 재시작. 링만 · 예약/발송/TG/메일 0 */
   var undoToast='';
   var undoToastTok=0;
   var undoToastRetr=false;
@@ -109,25 +110,41 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   }
   function undoDoneId(){ return 'undoDone'; }
   var undoDoneRingTok=0;
+  var undoDoneRingOn=false;
   function undoDoneFocusRingMs(){ return 400; }
+  function undoDoneRingIsOn(){
+    if(undoDoneRingOn) return true;
+    var el=typeof document!=='undefined'?document.getElementById(undoDoneId()):null;
+    return !!(el && el.getAttribute && el.getAttribute('data-focus-ring')==='1');
+  }
   function clearUndoDoneFocusRing(){
     var el=typeof document!=='undefined'?document.getElementById(undoDoneId()):null;
     if(!el) return;
     el.style.outline='';
     el.style.outlineOffset='';
     el.style.boxShadow='';
-    if(el.setAttribute) el.setAttribute('data-focus-ring','0');
+    if(el.setAttribute){
+      el.setAttribute('data-focus-ring','0');
+      el.setAttribute('data-re-ring','0');
+    }
   }
   function armUndoDoneFocusRing(){
     var el=typeof document!=='undefined'?document.getElementById(undoDoneId()):null;
     if(!el) return false;
+    var retr=undoDoneRingIsOn();
+    undoDoneRingOn=true;
     el.style.outline='2px solid #67e8f9';
     el.style.outlineOffset='2px';
     el.style.boxShadow='0 0 0 4px #67e8f955';
-    if(el.setAttribute) el.setAttribute('data-focus-ring','1');
+    if(el.setAttribute){
+      el.setAttribute('data-focus-ring','1');
+      el.setAttribute('data-re-ring', retr?'1':'0');
+      el.setAttribute('data-ring-tap','1');
+    }
     var tok=++undoDoneRingTok;
     setTimeout(function(){
       if(tok!==undoDoneRingTok) return;
+      undoDoneRingOn=false;
       clearUndoDoneFocusRing();
     }, undoDoneFocusRingMs());
     return true;
@@ -296,6 +313,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     if(sk) sk.onclick=function(){ skipIfDoneSet(!skipOn); render(msg||''); };
     var ud=document.getElementById('undoDone');
     if(ud) ud.onclick=function(){
+      if(undoDoneRingIsOn()){ armUndoDoneFocusRing(); return; }
       if(!done[curStep]) return;
       if(undoDone(curStep)) armUndoToast(curStep);
       render(msg||'');
