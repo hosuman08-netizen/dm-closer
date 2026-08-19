@@ -48,6 +48,32 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       .replace(/[ \t]+\n/g,'\n')
       .trim();
   }
+  /* WAVE123: skip-if-done. 로컬 장 플래그만 · 예약/발송/TG/메일 0 */
+  var STEP_KEYS=['open','value','close'];
+  function doneGet(){
+    try{
+      var d=JSON.parse(localStorage.getItem('dm_done')||'{}');
+      return {open:!!d.open,value:!!d.value,close:!!d.close};
+    }catch(e){return {open:false,value:false,close:false};}
+  }
+  function doneSet(step,v){
+    if(!steps[step]) return;
+    var d=doneGet(); d[step]=!!v;
+    try{localStorage.setItem('dm_done',JSON.stringify(d));}catch(e){}
+  }
+  function doneN(){var d=doneGet(); return (d.open?1:0)+(d.value?1:0)+(d.close?1:0);}
+  function skipIfDoneOn(){try{return localStorage.getItem('dm_skip_done')==='1';}catch(e){return false;}}
+  function skipIfDoneSet(on){try{localStorage.setItem('dm_skip_done',on?'1':'0');}catch(e){}}
+  function nextUndone(from){
+    var d=doneGet();
+    var start=STEP_KEYS.indexOf(from);
+    if(start<0) start=0;
+    for(var i=0;i<STEP_KEYS.length;i++){
+      var k=STEP_KEYS[(start+i)%STEP_KEYS.length];
+      if(!d[k]) return k;
+    }
+    return from;
+  }
   function dayKey(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function fomoLeft(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}
   function hist(){try{return JSON.parse(localStorage.getItem('dm_hist')||'[]');}catch(e){return[];}}
@@ -94,7 +120,14 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     if(!lastW&&sl.name) lastW=sl.name;
     var curStep=stepGet();
     var dels=delayGet();
-    root.innerHTML='<div class="card"><div class="sub">톤 4종 · 시퀀스 3장 · D+'+dels[curStep]+' · 오늘 '+todayN()+'초안 · 복사 '+copyN()+' · 보냄✓ '+sentN()+' · 🔥'+sc+'일 · 이력 '+h.length+' · 창 '+fomoLeft()+'</div>'
+    var skipOn=skipIfDoneOn();
+    var done=doneGet();
+    if(skipOn && done[curStep] && doneN()<STEP_KEYS.length){
+      curStep=nextUndone(curStep);
+      stepSet(curStep);
+      done=doneGet();
+    }
+    root.innerHTML='<div class="card"><div class="sub">톤 4종 · 시퀀스 3장 · D+'+dels[curStep]+' · 오늘 '+todayN()+'초안 · 복사 '+copyN()+' · 보냄✓ '+sentN()+' · 장✓ '+doneN()+'/3 · 🔥'+sc+'일 · 이력 '+h.length+' · 창 '+fomoLeft()+'</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+presets.map(function(p){return '<button class="sec" data-pre="'+p+'" style="padding:6px 8px;font-size:12px">'+p+'</button>';}).join('')+'</div>'
       +'<input id="prod" placeholder="예: Mac Wallpaper / 사주 미니앱" value="'+lastP.replace(/"/g,'&quot;')+'"/>'
       +'<input id="who" placeholder="{이름} 상대 (크리에이터, 사장님…)" value="'+String(lastW||sl.name||'').replace(/"/g,'&quot;')+'"/>'
@@ -107,7 +140,8 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       +'<div class="sub">시퀀스 3장 · 간격만 · 발송/스케줄 없음</div>'
       +'<div class="row" id="seqTabs" style="margin:4px 0 8px">'
       +Object.keys(steps).map(function(k,idx){
-        return '<button class="'+(k===curStep?'':'sec')+'" data-step="'+k+'" style="flex:1">'+(idx+1)+' '+steps[k]+' · D+'+dels[k]+'</button>';
+        var mark=done[k]?' ✓':'';
+        return '<button class="'+(k===curStep?'':'sec')+'" data-step="'+k+'" style="flex:1'+(done[k]&&k!==curStep?';opacity:.55':'')+'">'+(idx+1)+' '+steps[k]+' · D+'+dels[k]+mark+'</button>';
       }).join('')
       +'</div>'
       +'<div class="row" id="delayChips" style="margin:0 0 8px;gap:4px">'
@@ -116,6 +150,9 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
         return '<button type="button" class="sec" data-delay="'+n+'" style="padding:4px 8px;font-size:11px;border-radius:999px'+(on?';border-color:#e0b552;color:#e0b552':'')+'">D+'+n+'</button>';
       }).join('')
       +'<span class="sub" style="margin:0">이 장 간격 · 예약 없음</span></div>'
+      +'<div class="row" style="margin:0 0 8px;gap:6px;align-items:center">'
+      +'<button type="button" id="skipDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(skipOn?';border-color:#e0b552;color:#e0b552':'')+'">skip-if-done'+(skipOn?' ON':'')+'</button>'
+      +'<span class="sub" style="margin:0">'+(skipOn?(doneN()>=3?'3장 보냄✓ · 초안만':('보냄✓ 장 건너뜀 · 남은 '+(3-doneN()))):'보냄✓ 장 유지 · 발송 없음')+'</span></div>'
       +'<div class="row" style="margin-top:8px;gap:6px"><button id="go">DM 초안</button><button class="sec" id="allTones">4톤 한 번에</button></div>'
       +(msg?'<p class="sub" id="delayHint" style="margin:8px 0 0">이 장 '+steps[curStep]+' · D+'+dels[curStep]+' · 예약/발송 없음</p>':'')
       +'<div id="out" class="card" style="margin-top:10px;'+(msg?'':'display:none')+'">'+(msg||'').replace(/</g,'&lt;')+'</div>'
@@ -138,6 +175,8 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     Array.prototype.forEach.call(document.querySelectorAll('[data-delay]'),function(b){
       b.onclick=function(){ delaySet(curStep,+b.getAttribute('data-delay')); render(msg||''); };
     });
+    var sk=document.getElementById('skipDone');
+    if(sk) sk.onclick=function(){ skipIfDoneSet(!skipOn); render(msg||''); };
     function persistSlotsNow(){
       var whoEl=document.getElementById('who');
       var hookEl=document.getElementById('slotHook');
@@ -209,10 +248,9 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     var ms=document.getElementById('markSent');
     if(ms) ms.onclick=function(){
       try{localStorage.setItem('dm_sent_'+dayKey(0),String(sentN()+1));}catch(e){}
-      ms.textContent='보냄 ✓';
-      ms.style.background='#166534';
-      ms.style.color='#bbf7d0';
-      try{legionTrack('checklist_sent',{local:1})}catch(e){}
+      doneSet(stepGet(), true);
+      try{legionTrack('checklist_sent',{local:1,step:stepGet()})}catch(e){}
+      render(msg||'');
     };
   }
   try{legionTrack('session_start',{})}catch(e){}
