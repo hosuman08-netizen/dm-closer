@@ -4,7 +4,10 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
 (function(){
   var root=document.getElementById('app');
   var tones={friendly:'친근',pro:'프로',short:'짧고 세게',urgent:'마감 FOMO'};
+  var steps={open:'오프너',value:'가치',close:'클로즈'};
   var presets=['Mac Wallpaper','사주 미니앱','타로 오라클','에코특공대','AI Companion'];
+  function stepGet(){try{var s=localStorage.getItem('dm_step')||'open';return steps[s]?s:'open';}catch(e){return 'open';}}
+  function stepSet(s){try{localStorage.setItem('dm_step',s);}catch(e){}}
   function dayKey(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function fomoLeft(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}
   function hist(){try{return JSON.parse(localStorage.getItem('dm_hist')||'[]');}catch(e){return[];}}
@@ -20,7 +23,22 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   function todayN(){try{return +(localStorage.getItem('dm_day_'+dayKey(0))||0);}catch(e){return 0;}}
   function bumpToday(){try{localStorage.setItem('dm_day_'+dayKey(0),String(todayN()+1));}catch(e){}}
   function copyN(){try{return +(localStorage.getItem('dm_copy')||0);}catch(e){return 0;}}
-  function build(p,w,t){
+  function sentN(){try{return +(localStorage.getItem('dm_sent_'+dayKey(0))||0);}catch(e){return 0;}}
+  function nextToneKey(cur){var keys=Object.keys(tones);var i=keys.indexOf(cur);return keys[(i<0?0:i+1)%keys.length];}
+  function build(p,w,t,step){
+    step=step||stepGet();
+    if(step==='value'){
+      if(t==='short') return w+', '+p+' 핵심은 시간 절약 하나예요. 첫 주에 체감 포인트만 짧게 드릴게요.';
+      if(t==='pro') return w+'님, '+p+'로 비슷한 팀이 줄인 건 (1)초안 시간 (2)팔로업 누락입니다. 프로세스만 공유드릴 수 있어요.';
+      if(t==='urgent') return w+', 오늘 열어둔 자리에서 '+p+' 가치만 3줄로 전달드릴게요. 필요 없으면 패스하시면 됩니다.';
+      return w+'! '+p+' 써보신 분들이 공통으로 말한 건 "첫 초안이 빨라졌다"예요. 링크는 원하시면 드릴게요.';
+    }
+    if(step==='close'){
+      if(t==='short') return w+', '+p+' 관심 있으면 답 한 줄만 주세요. 없으면 여기서 접을게요.';
+      if(t==='pro') return w+'님, '+p+' 15분 콜 가능하신 요일 하나만 알려주실 수 있을까요? 아니면 자료만 보내드릴게요.';
+      if(t==='urgent') return w+', 오늘 자리 마감 전에 회신 주시면 바로 연결합니다. 아니면 다음에 볼게요.';
+      return w+'! 편하게 이모지 하나만 남겨주셔도 돼요. '+p+' 링크 바로 드릴게요.';
+    }
     if(t==='short') return '안녕하세요 '+w+', '+p+' 60초만 봐주실 수 있을까요? 가치 없으면 바로 접을게요.';
     if(t==='pro') return '안녕하세요 '+w+',\n\n'+p+' 관련해 간단히 제안 드립니다. 비슷한 분들이 첫 주에 체감한 포인트는 (1)시간 절약 (2)전환입니다. 15분 콜 가능 시간이 있으실까요?';
     if(t==='urgent') return '안녕하세요 '+w+', 오늘까지만 열어둔 자리 있어서 짧게 연락드려요. '+p+' 관심 있으시면 바로 연결해드릴게요.';
@@ -32,16 +50,27 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     var lastP=localStorage.getItem('dm_prod')||'';
     var lastW=localStorage.getItem('dm_who')||'';
     var lastT=localStorage.getItem('dm_tone')||'friendly';
-    root.innerHTML='<div class="card"><div class="sub">톤 4종 · 오늘 '+todayN()+'초안 · 복사 '+copyN()+' · 🔥'+sc+'일 · 이력 '+h.length+' · 창 '+fomoLeft()+'</div>'
+    var curStep=stepGet();
+    root.innerHTML='<div class="card"><div class="sub">톤 4종 · 시퀀스 3장 · 오늘 '+todayN()+'초안 · 복사 '+copyN()+' · 보냄✓ '+sentN()+' · 🔥'+sc+'일 · 이력 '+h.length+' · 창 '+fomoLeft()+'</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+presets.map(function(p){return '<button class="sec" data-pre="'+p+'" style="padding:6px 8px;font-size:12px">'+p+'</button>';}).join('')+'</div>'
       +'<input id="prod" placeholder="예: Mac Wallpaper / 사주 미니앱" value="'+lastP.replace(/"/g,'&quot;')+'"/>'
       +'<input id="who" placeholder="상대 (크리에이터, 사장님…)" value="'+lastW.replace(/"/g,'&quot;')+'"/>'
       +'<div class="sub">톤</div><select id="tone">'
       +Object.keys(tones).map(function(k){return '<option value="'+k+'"'+(k===lastT?' selected':'')+'>'+tones[k]+'</option>';}).join('')
       +'</select>'
+      +'<div class="sub">시퀀스 3장 · 발송/스케줄 없음</div>'
+      +'<div class="row" id="seqTabs" style="margin:4px 0 8px">'
+      +Object.keys(steps).map(function(k,idx){
+        return '<button class="'+(k===curStep?'':'sec')+'" data-step="'+k+'" style="flex:1">'+(idx+1)+' '+steps[k]+'</button>';
+      }).join('')
+      +'</div>'
       +'<div class="row" style="margin-top:8px;gap:6px"><button id="go">DM 초안</button><button class="sec" id="allTones">4톤 한 번에</button></div>'
       +'<div id="out" class="card" style="margin-top:10px;'+(msg?'':'display:none')+'">'+(msg||'').replace(/</g,'&lt;')+'</div>'
-      +'<button id="copyBtn" style="margin-top:8px;'+(msg?'':'display:none')+'">복사</button></div>'
+      +'<div class="row" id="draftCtas" style="margin-top:8px;'+(msg?'':'display:none')+'">'
+      +'<button id="copyBtn" style="flex:1">복사</button>'
+      +'<button class="sec" id="nextTone" style="flex:1">다음 톤</button>'
+      +'<button class="sec" id="markSent" style="flex:1">보냄 ✓</button></div>'
+      +'<p class="sub" style="margin-top:6px;'+(msg?'':'display:none')+'">실채널 연결 없음 · 콜드 대량발송 금지 · 로컬 연습</p></div>'
       +(h.length?'<div class="card"><b>최근 초안</b><div id="hist" class="sub" style="margin-top:6px"></div></div>':'')
       +'<div id="moneyPipe" style="margin-top:12px;padding:10px;border:1px solid #c5a46e44;border-radius:12px;background:#16121c;text-align:center;font-size:12px">'
       +'<div style="color:#e0b552;font-weight:700;margin-bottom:4px">💎 후원 · 파이프</div>'
@@ -49,6 +78,9 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       +'<a style="color:#e0b552;margin:0 6px" href="https://hosuman08-netizen.github.io/legion-hub/?utm_source=dm&utm_medium=pipe">🎮 Arcade</a></div>';
     Array.prototype.forEach.call(document.querySelectorAll('[data-pre]'),function(b){
       b.onclick=function(){document.getElementById('prod').value=b.getAttribute('data-pre');};
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-step]'),function(b){
+      b.onclick=function(){ stepSet(b.getAttribute('data-step')); render(msg||''); };
     });
     if(h.length){
       document.getElementById('hist').innerHTML=h.slice(0,6).map(function(x,i){
@@ -67,7 +99,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       var p=document.getElementById('prod').value||'우리 서비스';
       var w=document.getElementById('who').value||'님';
       try{localStorage.setItem('dm_prod',p);localStorage.setItem('dm_who',w);localStorage.setItem('dm_tone',t);}catch(e){}
-      var m=build(p,w,t);
+      var m=build(p,w,t,stepGet());
       var hh=hist(); hh.unshift({prod:p,who:w,tone:t,msg:m,ts:Date.now()}); saveHist(hh);
       bumpToday(); return m;
     }
@@ -91,6 +123,21 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       try{localStorage.setItem('dm_copy',String(copyN()+1));}catch(e){}
       cb.textContent='복사됨 ✓'; setTimeout(function(){cb.textContent='복사';},1000);
       try{legionTrack('share_peak',{})}catch(e){}
+    };
+    var nt=document.getElementById('nextTone');
+    if(nt) nt.onclick=function(){
+      var nxt=nextToneKey(document.getElementById('tone').value||lastT);
+      document.getElementById('tone').value=nxt;
+      var m=genOne(nxt); bumpStreak(); render(m);
+      try{legionTrack('activate',{tone:nxt,next:1})}catch(e){}
+    };
+    var ms=document.getElementById('markSent');
+    if(ms) ms.onclick=function(){
+      try{localStorage.setItem('dm_sent_'+dayKey(0),String(sentN()+1));}catch(e){}
+      ms.textContent='보냄 ✓';
+      ms.style.background='#166534';
+      ms.style.color='#bbf7d0';
+      try{legionTrack('checklist_sent',{local:1})}catch(e){}
     };
   }
   try{legionTrack('session_start',{})}catch(e){}
