@@ -86,6 +86,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   /* WAVE148: 토스트에 장이름만. 로컬 라벨만 · 예약/발송/TG/메일 0 */
   /* WAVE155: 토스트 위치 고정. 레이아웃 안 밀림 · 예약/발송/TG/메일 0 */
   /* WAVE158: 토스트 재해제 시 재표시. 숨김 후 다시 켜기 · 예약/발송/TG/메일 0 */
+  /* WAVE164: 토스트 3초 숨김 정렬. 2200→3000 · 예약/발송/TG/메일 0 */
   var undoToast='';
   var undoToastTok=0;
   var undoToastRetr=false;
@@ -94,7 +95,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     return steps[step];
   }
   function undoToastPos(){ return 'fixed'; }
-  function undoToastMs(){ return 2200; }
+  function undoToastMs(){ return 3000; }
   function undoToastCss(){
     return 'position:'+undoToastPos()+';left:50%;bottom:18px;transform:translateX(-50%);z-index:40;margin:0;padding:8px 14px;border-radius:10px;background:#1c1826;border:1px solid #e0b552;color:#e0b552;max-width:420px;width:calc(100% - 28px);text-align:center;pointer-events:none';
   }
@@ -115,6 +116,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       el.style.cssText=undoToastCss();
       el.textContent=undoToast;
       el.setAttribute('data-retoast', retr?'1':'0');
+      el.setAttribute('data-hide-ms', String(undoToastMs()));
     }
     setTimeout(function(){
       if(tok!==undoToastTok) return;
@@ -204,7 +206,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       +'<button type="button" id="skipDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(skipOn?';border-color:#e0b552;color:#e0b552':'')+'">skip-if-done'+(skipOn?' ON':'')+'</button>'
       +'<button type="button" id="undoDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(done[curStep]?'':';opacity:.55')+'">장✓ 해제</button>'
       +'<span class="sub" style="margin:0">'+(done[curStep]?'현재 장✓ 1탭 해제 · 발송 없음':(skipOn?(doneN()>=3?'3장 보냄✓ · ✓탭=해제':('보냄✓ 건너뜀 · ✓탭=해제 · 남은 '+(3-doneN()))):'보냄✓ 장 유지 · 발송 없음'))+'</span></div>'
-      +(undoToast?'<p class="sub" id="undoToast" data-retoast="'+(undoToastRetr?'1':'0')+'" style="'+undoToastCss()+'">'+undoToast+'</p>':'')
+      +(undoToast?'<p class="sub" id="undoToast" data-retoast="'+(undoToastRetr?'1':'0')+'" data-hide-ms="'+undoToastMs()+'" style="'+undoToastCss()+'">'+undoToast+'</p>':'')
       +'<div class="row" style="margin-top:8px;gap:6px"><button id="go">DM 초안</button><button class="sec" id="allTones">4톤 한 번에</button></div>'
       +(msg?'<p class="sub" id="delayHint" style="margin:8px 0 0">이 장 '+steps[curStep]+' · D+'+dels[curStep]+' · 예약/발송 없음</p>':'')
       +'<div id="out" class="card" style="margin-top:10px;'+(msg?'':'display:none')+'">'+(msg||'').replace(/</g,'&lt;')+'</div>'
