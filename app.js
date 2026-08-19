@@ -8,6 +8,20 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   var presets=['Mac Wallpaper','사주 미니앱','타로 오라클','에코특공대','AI Companion'];
   function stepGet(){try{var s=localStorage.getItem('dm_step')||'open';return steps[s]?s:'open';}catch(e){return 'open';}}
   function stepSet(s){try{localStorage.setItem('dm_step',s);}catch(e){}}
+  /* WAVE89: 시퀀스 간격 칩. 로컬 라벨만 · 예약/발송/텔레그램/메일 0 */
+  var DELAYS=[0,1,2,3,5,7];
+  function delayGet(){
+    try{
+      var d=JSON.parse(localStorage.getItem('dm_delay')||'{}');
+      function n(k,fb){var v=+d[k]; return DELAYS.indexOf(v)>=0?v:fb;}
+      return {open:n('open',0),value:n('value',2),close:n('close',5)};
+    }catch(e){return {open:0,value:2,close:5};}
+  }
+  function delaySet(step,n){
+    if(!steps[step]||DELAYS.indexOf(+n)<0) return;
+    var d=delayGet(); d[step]=+n;
+    try{localStorage.setItem('dm_delay',JSON.stringify(d));}catch(e){}
+  }
   function dayKey(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function fomoLeft(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}
   function hist(){try{return JSON.parse(localStorage.getItem('dm_hist')||'[]');}catch(e){return[];}}
@@ -51,20 +65,28 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     var lastW=localStorage.getItem('dm_who')||'';
     var lastT=localStorage.getItem('dm_tone')||'friendly';
     var curStep=stepGet();
-    root.innerHTML='<div class="card"><div class="sub">톤 4종 · 시퀀스 3장 · 오늘 '+todayN()+'초안 · 복사 '+copyN()+' · 보냄✓ '+sentN()+' · 🔥'+sc+'일 · 이력 '+h.length+' · 창 '+fomoLeft()+'</div>'
+    var dels=delayGet();
+    root.innerHTML='<div class="card"><div class="sub">톤 4종 · 시퀀스 3장 · D+'+dels[curStep]+' · 오늘 '+todayN()+'초안 · 복사 '+copyN()+' · 보냄✓ '+sentN()+' · 🔥'+sc+'일 · 이력 '+h.length+' · 창 '+fomoLeft()+'</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+presets.map(function(p){return '<button class="sec" data-pre="'+p+'" style="padding:6px 8px;font-size:12px">'+p+'</button>';}).join('')+'</div>'
       +'<input id="prod" placeholder="예: Mac Wallpaper / 사주 미니앱" value="'+lastP.replace(/"/g,'&quot;')+'"/>'
       +'<input id="who" placeholder="상대 (크리에이터, 사장님…)" value="'+lastW.replace(/"/g,'&quot;')+'"/>'
       +'<div class="sub">톤</div><select id="tone">'
       +Object.keys(tones).map(function(k){return '<option value="'+k+'"'+(k===lastT?' selected':'')+'>'+tones[k]+'</option>';}).join('')
       +'</select>'
-      +'<div class="sub">시퀀스 3장 · 발송/스케줄 없음</div>'
+      +'<div class="sub">시퀀스 3장 · 간격만 · 발송/스케줄 없음</div>'
       +'<div class="row" id="seqTabs" style="margin:4px 0 8px">'
       +Object.keys(steps).map(function(k,idx){
-        return '<button class="'+(k===curStep?'':'sec')+'" data-step="'+k+'" style="flex:1">'+(idx+1)+' '+steps[k]+'</button>';
+        return '<button class="'+(k===curStep?'':'sec')+'" data-step="'+k+'" style="flex:1">'+(idx+1)+' '+steps[k]+' · D+'+dels[k]+'</button>';
       }).join('')
       +'</div>'
+      +'<div class="row" id="delayChips" style="margin:0 0 8px;gap:4px">'
+      +DELAYS.map(function(n){
+        var on=dels[curStep]===n;
+        return '<button type="button" class="sec" data-delay="'+n+'" style="padding:4px 8px;font-size:11px;border-radius:999px'+(on?';border-color:#e0b552;color:#e0b552':'')+'">D+'+n+'</button>';
+      }).join('')
+      +'<span class="sub" style="margin:0">이 장 간격 · 예약 없음</span></div>'
       +'<div class="row" style="margin-top:8px;gap:6px"><button id="go">DM 초안</button><button class="sec" id="allTones">4톤 한 번에</button></div>'
+      +(msg?'<p class="sub" id="delayHint" style="margin:8px 0 0">이 장 '+steps[curStep]+' · D+'+dels[curStep]+' · 예약/발송 없음</p>':'')
       +'<div id="out" class="card" style="margin-top:10px;'+(msg?'':'display:none')+'">'+(msg||'').replace(/</g,'&lt;')+'</div>'
       +'<div class="row" id="draftCtas" style="margin-top:8px;'+(msg?'':'display:none')+'">'
       +'<button id="copyBtn" style="flex:1">복사</button>'
@@ -81,6 +103,9 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-step]'),function(b){
       b.onclick=function(){ stepSet(b.getAttribute('data-step')); render(msg||''); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-delay]'),function(b){
+      b.onclick=function(){ delaySet(curStep,+b.getAttribute('data-delay')); render(msg||''); };
     });
     if(h.length){
       document.getElementById('hist').innerHTML=h.slice(0,6).map(function(x,i){
