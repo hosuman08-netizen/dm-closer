@@ -82,6 +82,24 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     doneSet(step, false);
     return true;
   }
+  /* WAVE141: 해제 토스트 1줄. 로컬 문구만 · 예약/발송/TG/메일 0 */
+  var undoToast='';
+  var undoToastTok=0;
+  function undoToastLine(step){
+    if(!steps[step]) return '';
+    return (steps[step])+' ✓ 해제 · 발송 없음';
+  }
+  function armUndoToast(step){
+    undoToast=undoToastLine(step);
+    if(!undoToast) return;
+    var tok=++undoToastTok;
+    setTimeout(function(){
+      if(tok!==undoToastTok) return;
+      undoToast='';
+      var el=document.getElementById('undoToast');
+      if(el) el.style.display='none';
+    },2200);
+  }
   function dayKey(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function fomoLeft(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}
   function hist(){try{return JSON.parse(localStorage.getItem('dm_hist')||'[]');}catch(e){return[];}}
@@ -162,6 +180,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       +'<button type="button" id="skipDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(skipOn?';border-color:#e0b552;color:#e0b552':'')+'">skip-if-done'+(skipOn?' ON':'')+'</button>'
       +'<button type="button" id="undoDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(done[curStep]?'':';opacity:.55')+'">장✓ 해제</button>'
       +'<span class="sub" style="margin:0">'+(done[curStep]?'현재 장✓ 1탭 해제 · 발송 없음':(skipOn?(doneN()>=3?'3장 보냄✓ · ✓탭=해제':('보냄✓ 건너뜀 · ✓탭=해제 · 남은 '+(3-doneN()))):'보냄✓ 장 유지 · 발송 없음'))+'</span></div>'
+      +(undoToast?'<p class="sub" id="undoToast" style="margin:4px 0 8px;color:#e0b552">'+undoToast+'</p>':'')
       +'<div class="row" style="margin-top:8px;gap:6px"><button id="go">DM 초안</button><button class="sec" id="allTones">4톤 한 번에</button></div>'
       +(msg?'<p class="sub" id="delayHint" style="margin:8px 0 0">이 장 '+steps[curStep]+' · D+'+dels[curStep]+' · 예약/발송 없음</p>':'')
       +'<div id="out" class="card" style="margin-top:10px;'+(msg?'':'display:none')+'">'+(msg||'').replace(/</g,'&lt;')+'</div>'
@@ -181,7 +200,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     Array.prototype.forEach.call(document.querySelectorAll('[data-step]'),function(b){
       b.onclick=function(){
         var k=b.getAttribute('data-step');
-        if(done[k]) undoDone(k);
+        if(done[k] && undoDone(k)) armUndoToast(k);
         stepSet(k);
         render(msg||'');
       };
@@ -194,7 +213,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     var ud=document.getElementById('undoDone');
     if(ud) ud.onclick=function(){
       if(!done[curStep]) return;
-      undoDone(curStep);
+      if(undoDone(curStep)) armUndoToast(curStep);
       render(msg||'');
     };
     function persistSlotsNow(){
