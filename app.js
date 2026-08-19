@@ -140,6 +140,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       el.setAttribute('data-focus-ring','1');
       el.setAttribute('data-re-ring', retr?'1':'0');
       el.setAttribute('data-ring-tap','1');
+      el.setAttribute('data-ring-off','0');
     }
     var tok=++undoDoneRingTok;
     setTimeout(function(){
@@ -147,6 +148,17 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       undoDoneRingOn=false;
       clearUndoDoneFocusRing();
     }, undoDoneFocusRingMs());
+    return true;
+  }
+  function killUndoDoneFocusRing(){
+    undoDoneRingTok++;
+    undoDoneRingOn=false;
+    clearUndoDoneFocusRing();
+    var e=typeof document!=='undefined'?document.getElementById(undoDoneId()):null;
+    if(e && e.setAttribute){
+      e.setAttribute('data-ring-off','1');
+      e.setAttribute('data-ring-tap','1');
+    }
     return true;
   }
   function focusUndoDone(){
@@ -313,7 +325,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     if(sk) sk.onclick=function(){ skipIfDoneSet(!skipOn); render(msg||''); };
     var ud=document.getElementById('undoDone');
     if(ud) ud.onclick=function(){
-      if(undoDoneRingIsOn()){ armUndoDoneFocusRing(); return; }
+      if(undoDoneRingIsOn()){ killUndoDoneFocusRing(); return; }
       if(!done[curStep]) return;
       if(undoDone(curStep)) armUndoToast(curStep);
       render(msg||'');
