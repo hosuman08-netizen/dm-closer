@@ -74,6 +74,14 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     }
     return from;
   }
+  /* WAVE131: 장✓ 해제 1탭. 로컬 플래그만 · 예약/발송/TG/메일 0 */
+  function undoDone(step){
+    if(!steps[step]) return false;
+    var d=doneGet();
+    if(!d[step]) return false;
+    doneSet(step, false);
+    return true;
+  }
   function dayKey(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function fomoLeft(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}
   function hist(){try{return JSON.parse(localStorage.getItem('dm_hist')||'[]');}catch(e){return[];}}
@@ -141,7 +149,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       +'<div class="row" id="seqTabs" style="margin:4px 0 8px">'
       +Object.keys(steps).map(function(k,idx){
         var mark=done[k]?' ✓':'';
-        return '<button class="'+(k===curStep?'':'sec')+'" data-step="'+k+'" style="flex:1'+(done[k]&&k!==curStep?';opacity:.55':'')+'">'+(idx+1)+' '+steps[k]+' · D+'+dels[k]+mark+'</button>';
+        return '<button class="'+(k===curStep?'':'sec')+'" data-step="'+k+'" title="'+(done[k]?'장✓ 해제':'')+'" style="flex:1'+(done[k]&&k!==curStep?';opacity:.55':'')+'">'+(idx+1)+' '+steps[k]+' · D+'+dels[k]+mark+'</button>';
       }).join('')
       +'</div>'
       +'<div class="row" id="delayChips" style="margin:0 0 8px;gap:4px">'
@@ -152,7 +160,8 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       +'<span class="sub" style="margin:0">이 장 간격 · 예약 없음</span></div>'
       +'<div class="row" style="margin:0 0 8px;gap:6px;align-items:center">'
       +'<button type="button" id="skipDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(skipOn?';border-color:#e0b552;color:#e0b552':'')+'">skip-if-done'+(skipOn?' ON':'')+'</button>'
-      +'<span class="sub" style="margin:0">'+(skipOn?(doneN()>=3?'3장 보냄✓ · 초안만':('보냄✓ 장 건너뜀 · 남은 '+(3-doneN()))):'보냄✓ 장 유지 · 발송 없음')+'</span></div>'
+      +'<button type="button" id="undoDone" class="sec" style="padding:4px 10px;font-size:11px;border-radius:999px'+(done[curStep]?'':';opacity:.55')+'">장✓ 해제</button>'
+      +'<span class="sub" style="margin:0">'+(done[curStep]?'현재 장✓ 1탭 해제 · 발송 없음':(skipOn?(doneN()>=3?'3장 보냄✓ · ✓탭=해제':('보냄✓ 건너뜀 · ✓탭=해제 · 남은 '+(3-doneN()))):'보냄✓ 장 유지 · 발송 없음'))+'</span></div>'
       +'<div class="row" style="margin-top:8px;gap:6px"><button id="go">DM 초안</button><button class="sec" id="allTones">4톤 한 번에</button></div>'
       +(msg?'<p class="sub" id="delayHint" style="margin:8px 0 0">이 장 '+steps[curStep]+' · D+'+dels[curStep]+' · 예약/발송 없음</p>':'')
       +'<div id="out" class="card" style="margin-top:10px;'+(msg?'':'display:none')+'">'+(msg||'').replace(/</g,'&lt;')+'</div>'
@@ -170,13 +179,24 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       b.onclick=function(){document.getElementById('prod').value=b.getAttribute('data-pre');};
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-step]'),function(b){
-      b.onclick=function(){ stepSet(b.getAttribute('data-step')); render(msg||''); };
+      b.onclick=function(){
+        var k=b.getAttribute('data-step');
+        if(done[k]) undoDone(k);
+        stepSet(k);
+        render(msg||'');
+      };
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-delay]'),function(b){
       b.onclick=function(){ delaySet(curStep,+b.getAttribute('data-delay')); render(msg||''); };
     });
     var sk=document.getElementById('skipDone');
     if(sk) sk.onclick=function(){ skipIfDoneSet(!skipOn); render(msg||''); };
+    var ud=document.getElementById('undoDone');
+    if(ud) ud.onclick=function(){
+      if(!done[curStep]) return;
+      undoDone(curStep);
+      render(msg||'');
+    };
     function persistSlotsNow(){
       var whoEl=document.getElementById('who');
       var hookEl=document.getElementById('slotHook');
