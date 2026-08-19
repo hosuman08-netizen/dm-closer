@@ -88,6 +88,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   /* WAVE158: 토스트 재해제 시 재표시. 숨김 후 다시 켜기 · 예약/발송/TG/메일 0 */
   /* WAVE164: 토스트 3초 숨김 정렬. 2200→3000 · 예약/발송/TG/메일 0 */
   /* WAVE169: 토스트 탭=즉시숨김. 3000ms 유지 · 예약/발송/TG/메일 0 */
+  /* WAVE173: 숨김 후 해제버튼 포커스. 포커스만 · 예약/발송/TG/메일 0 */
   var undoToast='';
   var undoToastTok=0;
   var undoToastRetr=false;
@@ -105,6 +106,15 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     if(!el) return false;
     return el.style.display==='none';
   }
+  function undoDoneId(){ return 'undoDone'; }
+  function focusUndoDone(){
+    var el=typeof document!=='undefined'?document.getElementById(undoDoneId()):null;
+    if(!el) return false;
+    try{ if(!el.hasAttribute||!el.hasAttribute('tabindex')) el.setAttribute('tabindex','-1'); }catch(e0){}
+    try{ if(el.focus) el.focus(); }catch(e1){}
+    if(el.setAttribute) el.setAttribute('data-focus-after-hide','1');
+    return true;
+  }
   function hideUndoToast(){
     undoToastTok++;
     undoToast='';
@@ -115,6 +125,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       e.setAttribute('data-retoast','0');
       e.setAttribute('data-tap-hide','1');
     }
+    focusUndoDone();
   }
   function bindUndoToastTap(){
     var el=typeof document!=='undefined'?document.getElementById('undoToast'):null;
