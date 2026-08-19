@@ -91,6 +91,8 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   /* WAVE173: 숨김 후 해제버튼 포커스. 포커스만 · 예약/발송/TG/메일 0 */
   /* WAVE178: 해제버튼 포커스 링. 링만 · 예약/발송/TG/메일 0 */
   /* WAVE183: 링 중 재탭=링 재시작. 링만 · 예약/발송/TG/메일 0 */
+  /* WAVE188: 링 탭=링 끄기. 링만 · 예약/발송/TG/메일 0 */
+  /* WAVE192: 끈 뒤 해제버튼 포커스 유지. 포커스만 · 예약/발송/TG/메일 0 */
   var undoToast='';
   var undoToastTok=0;
   var undoToastRetr=false;
@@ -150,6 +152,14 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     }, undoDoneFocusRingMs());
     return true;
   }
+  function holdUndoDoneFocus(){
+    var el=typeof document!=='undefined'?document.getElementById(undoDoneId()):null;
+    if(!el) return false;
+    try{ if(!el.hasAttribute||!el.hasAttribute('tabindex')) el.setAttribute('tabindex','-1'); }catch(e0){}
+    try{ if(el.focus) el.focus(); }catch(e1){}
+    if(el.setAttribute) el.setAttribute('data-focus-after-kill','1');
+    return true;
+  }
   function killUndoDoneFocusRing(){
     undoDoneRingTok++;
     undoDoneRingOn=false;
@@ -159,6 +169,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       e.setAttribute('data-ring-off','1');
       e.setAttribute('data-ring-tap','1');
     }
+    holdUndoDoneFocus();
     return true;
   }
   function focusUndoDone(){
