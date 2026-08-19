@@ -22,6 +22,32 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     var d=delayGet(); d[step]=+n;
     try{localStorage.setItem('dm_delay',JSON.stringify(d));}catch(e){}
   }
+  /* WAVE97: {이름}{훅}{CTA} 슬롯. 로컬 치환만 · 예약/발송/TG/메일 0 */
+  function slotsGet(){
+    try{
+      var s=JSON.parse(localStorage.getItem('dm_slots')||'{}');
+      return {
+        name:String(s.name!=null?s.name:(localStorage.getItem('dm_who')||'')),
+        hook:String(s.hook!=null?s.hook:''),
+        cta:String(s.cta!=null?s.cta:'')
+      };
+    }catch(e){return {name:'',hook:'',cta:''};}
+  }
+  function slotsSet(s){
+    try{localStorage.setItem('dm_slots',JSON.stringify({name:s.name||'',hook:s.hook||'',cta:s.cta||''}));}catch(e){}
+  }
+  function fillSlots(text,s,p){
+    var name=(s&&s.name)||'님';
+    var hook=(s&&s.hook)||p||'우리 서비스';
+    var cta=(s&&s.cta)||'';
+    return String(text||'')
+      .replace(/\{이름\}/g,name)
+      .replace(/\{훅\}/g,hook)
+      .replace(/\s*\{CTA\}/g,cta?('\n'+cta):'')
+      .replace(/\n{3,}/g,'\n\n')
+      .replace(/[ \t]+\n/g,'\n')
+      .trim();
+  }
   function dayKey(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function fomoLeft(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}
   function hist(){try{return JSON.parse(localStorage.getItem('dm_hist')||'[]');}catch(e){return[];}}
@@ -42,21 +68,21 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
   function build(p,w,t,step){
     step=step||stepGet();
     if(step==='value'){
-      if(t==='short') return w+', '+p+' 핵심은 시간 절약 하나예요. 첫 주에 체감 포인트만 짧게 드릴게요.';
-      if(t==='pro') return w+'님, '+p+'로 비슷한 팀이 줄인 건 (1)초안 시간 (2)팔로업 누락입니다. 프로세스만 공유드릴 수 있어요.';
-      if(t==='urgent') return w+', 오늘 열어둔 자리에서 '+p+' 가치만 3줄로 전달드릴게요. 필요 없으면 패스하시면 됩니다.';
-      return w+'! '+p+' 써보신 분들이 공통으로 말한 건 "첫 초안이 빨라졌다"예요. 링크는 원하시면 드릴게요.';
+      if(t==='short') return '{이름}, {훅} 핵심은 시간 절약 하나예요. 첫 주에 체감 포인트만 짧게 드릴게요. {CTA}';
+      if(t==='pro') return '{이름}님, {훅}로 비슷한 팀이 줄인 건 (1)초안 시간 (2)팔로업 누락입니다. 프로세스만 공유드릴 수 있어요. {CTA}';
+      if(t==='urgent') return '{이름}, 오늘 열어둔 자리에서 {훅} 가치만 3줄로 전달드릴게요. 필요 없으면 패스하시면 됩니다. {CTA}';
+      return '{이름}! {훅} 써보신 분들이 공통으로 말한 건 "첫 초안이 빨라졌다"예요. 링크는 원하시면 드릴게요. {CTA}';
     }
     if(step==='close'){
-      if(t==='short') return w+', '+p+' 관심 있으면 답 한 줄만 주세요. 없으면 여기서 접을게요.';
-      if(t==='pro') return w+'님, '+p+' 15분 콜 가능하신 요일 하나만 알려주실 수 있을까요? 아니면 자료만 보내드릴게요.';
-      if(t==='urgent') return w+', 오늘 자리 마감 전에 회신 주시면 바로 연결합니다. 아니면 다음에 볼게요.';
-      return w+'! 편하게 이모지 하나만 남겨주셔도 돼요. '+p+' 링크 바로 드릴게요.';
+      if(t==='short') return '{이름}, {훅} 관심 있으면 답 한 줄만 주세요. 없으면 여기서 접을게요. {CTA}';
+      if(t==='pro') return '{이름}님, {훅} 15분 콜 가능하신 요일 하나만 알려주실 수 있을까요? 아니면 자료만 보내드릴게요. {CTA}';
+      if(t==='urgent') return '{이름}, 오늘 자리 마감 전에 회신 주시면 바로 연결합니다. 아니면 다음에 볼게요. {CTA}';
+      return '{이름}! 편하게 이모지 하나만 남겨주셔도 돼요. {훅} 링크 바로 드릴게요. {CTA}';
     }
-    if(t==='short') return '안녕하세요 '+w+', '+p+' 60초만 봐주실 수 있을까요? 가치 없으면 바로 접을게요.';
-    if(t==='pro') return '안녕하세요 '+w+',\n\n'+p+' 관련해 간단히 제안 드립니다. 비슷한 분들이 첫 주에 체감한 포인트는 (1)시간 절약 (2)전환입니다. 15분 콜 가능 시간이 있으실까요?';
-    if(t==='urgent') return '안녕하세요 '+w+', 오늘까지만 열어둔 자리 있어서 짧게 연락드려요. '+p+' 관심 있으시면 바로 연결해드릴게요.';
-    return '안녕하세요 '+w+'! 평소 콘텐츠/업무 보면서 응원했어요. '+p+' 한번 써보시면 딱일 것 같아서 슬쩍 공유드려요 🙂 관심 있으시면 링크 바로 드릴게요!';
+    if(t==='short') return '안녕하세요 {이름}, {훅} 60초만 봐주실 수 있을까요? 가치 없으면 바로 접을게요. {CTA}';
+    if(t==='pro') return '안녕하세요 {이름},\n\n{훅} 관련해 간단히 제안 드립니다. 비슷한 분들이 첫 주에 체감한 포인트는 (1)시간 절약 (2)전환입니다. 15분 콜 가능 시간이 있으실까요? {CTA}';
+    if(t==='urgent') return '안녕하세요 {이름}, 오늘까지만 열어둔 자리 있어서 짧게 연락드려요. {훅} 관심 있으시면 바로 연결해드릴게요. {CTA}';
+    return '안녕하세요 {이름}! 평소 콘텐츠/업무 보면서 응원했어요. {훅} 한번 써보시면 딱일 것 같아서 슬쩍 공유드려요 🙂 관심 있으시면 링크 바로 드릴게요! {CTA}';
   }
   function render(msg){
     var sc=0; try{sc=(JSON.parse(localStorage.getItem('dm_streak')||'{}').count)||0;}catch(e){}
@@ -64,12 +90,17 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     var lastP=localStorage.getItem('dm_prod')||'';
     var lastW=localStorage.getItem('dm_who')||'';
     var lastT=localStorage.getItem('dm_tone')||'friendly';
+    var sl=slotsGet();
+    if(!lastW&&sl.name) lastW=sl.name;
     var curStep=stepGet();
     var dels=delayGet();
     root.innerHTML='<div class="card"><div class="sub">톤 4종 · 시퀀스 3장 · D+'+dels[curStep]+' · 오늘 '+todayN()+'초안 · 복사 '+copyN()+' · 보냄✓ '+sentN()+' · 🔥'+sc+'일 · 이력 '+h.length+' · 창 '+fomoLeft()+'</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+presets.map(function(p){return '<button class="sec" data-pre="'+p+'" style="padding:6px 8px;font-size:12px">'+p+'</button>';}).join('')+'</div>'
       +'<input id="prod" placeholder="예: Mac Wallpaper / 사주 미니앱" value="'+lastP.replace(/"/g,'&quot;')+'"/>'
-      +'<input id="who" placeholder="상대 (크리에이터, 사장님…)" value="'+lastW.replace(/"/g,'&quot;')+'"/>'
+      +'<input id="who" placeholder="{이름} 상대 (크리에이터, 사장님…)" value="'+String(lastW||sl.name||'').replace(/"/g,'&quot;')+'"/>'
+      +'<div class="sub" style="margin:8px 0 4px">변수슬롯 {이름}{훅}{CTA} · 초안 치환만 · 발송 없음</div>'
+      +'<input id="slotHook" placeholder="{훅} 한 줄 (비우면 상품명)" value="'+String(sl.hook||'').replace(/"/g,'&quot;')+'"/>'
+      +'<input id="slotCta" placeholder="{CTA} 마지막 한 줄 (선택)" value="'+String(sl.cta||'').replace(/"/g,'&quot;')+'"/>'
       +'<div class="sub">톤</div><select id="tone">'
       +Object.keys(tones).map(function(k){return '<option value="'+k+'"'+(k===lastT?' selected':'')+'>'+tones[k]+'</option>';}).join('')
       +'</select>'
@@ -107,6 +138,16 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
     Array.prototype.forEach.call(document.querySelectorAll('[data-delay]'),function(b){
       b.onclick=function(){ delaySet(curStep,+b.getAttribute('data-delay')); render(msg||''); };
     });
+    function persistSlotsNow(){
+      var whoEl=document.getElementById('who');
+      var hookEl=document.getElementById('slotHook');
+      var ctaEl=document.getElementById('slotCta');
+      slotsSet({name:(whoEl&&whoEl.value)||'',hook:(hookEl&&hookEl.value)||'',cta:(ctaEl&&ctaEl.value)||''});
+    }
+    ['who','slotHook','slotCta'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.onchange=persistSlotsNow;
+    });
     if(h.length){
       document.getElementById('hist').innerHTML=h.slice(0,6).map(function(x,i){
         return '<div style="padding:6px 0;border-bottom:1px solid #2a2438;display:flex;justify-content:space-between;gap:8px">'
@@ -120,12 +161,21 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
         el.onclick=function(){ var hh=hist(); hh.splice(+el.getAttribute('data-del'),1); saveHist(hh); render(msg||''); };
       });
     }
-    function genOne(t){
+    function readSlots(){
       var p=document.getElementById('prod').value||'우리 서비스';
       var w=document.getElementById('who').value||'님';
-      try{localStorage.setItem('dm_prod',p);localStorage.setItem('dm_who',w);localStorage.setItem('dm_tone',t);}catch(e){}
-      var m=build(p,w,t,stepGet());
-      var hh=hist(); hh.unshift({prod:p,who:w,tone:t,msg:m,ts:Date.now()}); saveHist(hh);
+      var hookEl=document.getElementById('slotHook');
+      var ctaEl=document.getElementById('slotCta');
+      var s={name:w,hook:(hookEl&&hookEl.value)||'',cta:(ctaEl&&ctaEl.value)||''};
+      slotsSet(s);
+      try{localStorage.setItem('dm_prod',p);localStorage.setItem('dm_who',w);}catch(e){}
+      return {p:p,s:s};
+    }
+    function genOne(t){
+      var r=readSlots();
+      try{localStorage.setItem('dm_tone',t);}catch(e){}
+      var m=fillSlots(build(r.p,r.s.name,t,stepGet()),r.s,r.p);
+      var hh=hist(); hh.unshift({prod:r.p,who:r.s.name,tone:t,msg:m,ts:Date.now()}); saveHist(hh);
       bumpToday(); return m;
     }
     document.getElementById('go').onclick=function(){
