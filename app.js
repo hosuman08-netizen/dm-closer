@@ -329,7 +329,7 @@ try{if(!sessionStorage.getItem('lw_p27_agentic__session_counter')){sessionStorag
       +'<div id="moneyPipe" style="margin-top:12px;padding:10px;border:1px solid #c5a46e44;border-radius:12px;background:#16121c;text-align:center;font-size:12px">'
       +'<div style="color:#e0b552;font-weight:700;margin-bottom:4px">💎 후원 · 파이프</div>'
       +'<a style="color:#ece8f1;margin:0 6px" href="https://hosuman08-netizen.github.io/influencer-ops/?utm_source=dm&utm_medium=pipe">📣 Influencer Ops</a>'
-      +'<a style="color:#e0b552;margin:0 6px" href="https://hosuman08-netizen.github.io/legion-hub/?utm_source=dm&utm_medium=pipe">🎮 Arcade</a></div>';
+      +'</div>';
     Array.prototype.forEach.call(document.querySelectorAll('[data-pre]'),function(b){
       b.onclick=function(){document.getElementById('prod').value=b.getAttribute('data-pre');};
     });
